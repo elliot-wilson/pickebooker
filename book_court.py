@@ -20,7 +20,7 @@ class PickleBooker:
         password = os.getenv("ACCOUNT_PASSWORD")
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             page.goto("https://my.lifetime.life/login.html")
             page.locator("input[id='account-username']").fill(username)
@@ -39,16 +39,12 @@ class PickleBooker:
                 return
     
             slot.evaluate("el => el.style.outline = '3px solid hotpink'")
-            page.wait_for_timeout(4000)
             with page.expect_navigation():
                 slot.click()
-            page.wait_for_timeout(4000)
             page.click("label[for='acceptwaiver']")
-            page.wait_for_timeout(2000)
             with page.expect_navigation():
                 page.locator("button:has-text('Finish')").click()
-            page.wait_for_timeout(4000)
-            page.pause()
+            page.close()
 
     def _format_booking_url(self, date: str):
         base_url = "https://my.lifetime.life/clubs/mo/frontenac/resource-booking.html"
