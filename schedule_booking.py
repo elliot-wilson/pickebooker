@@ -33,7 +33,7 @@ def schedule_run(target_date_str, start_gte, start_lte):
             "Year": run_date.year,
             "Month": run_date.month,
             "Day": run_date.day,
-            "Hour": 9,
+            "Hour": 10,
             "Minute": 0,
         },
         "StandardOutPath": f"/tmp/{label}.out",

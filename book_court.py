@@ -2,11 +2,11 @@ import argparse
 import os
 import subprocess
 from datetime import datetime, timedelta
+from pathlib import Path
 
-from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 
-from get_authenticated_context import get_authenticated_context
+AUTH_PATH = Path(__file__).resolve().parent / "auth.json"
 
 
 class PickleBooker:
@@ -19,7 +19,7 @@ class PickleBooker:
     def book_slot(self):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            context = browser.new_context(storage_state="auth.json")
+            context = browser.new_context(storage_state=AUTH_PATH)
             page = context.new_page()
             page.goto(
                 self._format_booking_url(
