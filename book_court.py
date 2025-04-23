@@ -1,9 +1,12 @@
 import argparse
 import os
+import subprocess
 from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
+
+from get_authenticated_context import get_authenticated_context
 
 
 class PickleBooker:
@@ -14,19 +17,10 @@ class PickleBooker:
         self.end_hour = end_hour
 
     def book_slot(self):
-        load_dotenv()
-
-        username = os.getenv("ACCOUNT_USERNAME")
-        password = os.getenv("ACCOUNT_PASSWORD")
-
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.goto("https://my.lifetime.life/login.html")
-            page.locator("input[id='account-username']").fill(username)
-            page.locator("input[id='account-password']").fill(password)
-            with page.expect_navigation():
-                page.locator("button[id='login-btn']").click()
+            context = browser.new_context(storage_state="auth.json")
+            page = context.new_page()
             page.goto(
                 self._format_booking_url(
                     date=self.date,
@@ -37,8 +31,7 @@ class PickleBooker:
 
             if not slot:
                 return
-    
-            slot.evaluate("el => el.style.outline = '3px solid hotpink'")
+
             with page.expect_navigation():
                 slot.click()
             page.click("label[for='acceptwaiver']")
@@ -58,12 +51,14 @@ class PickleBooker:
         }
         url = f"{base_url}?{'&'.join([f'{key}={value}' for key, value in params.items()])}"
         return url
-    
+
     def _find_available_timeslot(self, page, start_hour: int, end_hour: int):
         current = datetime.today().replace(hour=start_hour, minute=0)
-        end = current.replace(hour=end_hour, minute=0)   
+        end = current.replace(hour=end_hour, minute=0)
         while current <= end:
-            label = current.strftime("%I:%M %p").lstrip("0")  # e.g. "9:00 AM", "3:30 PM"
+            label = current.strftime("%I:%M %p").lstrip(
+                "0"
+            )  # e.g. "9:00 AM", "3:30 PM"
 
             selector = f"a.timeslot:has-text('{label}')"
 
@@ -73,7 +68,15 @@ class PickleBooker:
             except Exception:
                 current += timedelta(minutes=30)
 
-        return None 
+        return None
+
+
+def clean_up():
+    plist_path = os.getenv("LAUNCH_AGENT_PATH")
+    if plist_path:
+        subprocess.run(["launchctl", "bootout", f"gui/{os.getuid()}", plist_path])
+        os.remove(plist_path)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -82,7 +85,6 @@ if __name__ == "__main__":
         type=str,
         help="Date to book the court (YYYY-MM-DD)",
         required=True,
-
     )
     parser.add_argument(
         "--start-gte",
@@ -101,3 +103,4 @@ if __name__ == "__main__":
         start_hour=parser.parse_args().start_gte,
         end_hour=parser.parse_args().start_lte,
     ).book_slot()
+    clean_up()
