@@ -104,3 +104,5 @@ if __name__ == "__main__":
         end_hour=parser.parse_args().start_lte,
     ).book_slot()
     clean_up()
+    with open("/Users/elliotwilson/work/picklebooker/logs/last_run.txt", "w") as f:
+        f.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
