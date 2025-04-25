@@ -1,5 +1,6 @@
 import argparse
 import json
+import time
 from datetime import datetime
 
 import pytz
@@ -11,21 +12,91 @@ COURT_IDS = {
     3: "ZXhlcnA6MjgwYnI1MjAxOjcwMTU5MTE0MTUwOA==",
 }
 
+MAX_RETRIES = 3
+RETRY_DELAY = 0.2  # seconds
+
+
+def make_request_with_retries(
+    method: str,
+    url: str,
+    headers: dict,
+    payload: dict | None = None,
+    retries: int = MAX_RETRIES,
+) -> requests.Response:
+    for attempt in range(retries):
+        if method.upper() == "POST":
+            response = requests.post(url, headers=headers, json=payload)
+        elif method.upper() == "PUT":
+            response = requests.put(url, headers=headers, json=payload)
+        else:
+            raise ValueError(f"Unsupported method: {method}")
+
+        if response.ok:
+            return response
+        elif response.status_code in {401, 403}:
+            print(
+                """
+                ❌ Authentication failed. Remember to run extract_authentication_headers.py first and confirm that it has all 4 keys:
+                    - ocp-apim-subscription-key
+                    - x-ltf-ssoid
+                    - x-ltf-jwe
+                    - x-ltf-profile
+                """
+            )
+            raise SystemExit(1)
+        elif response.status_code == 500:
+            print(f"❌ Server error on attempt {attempt+1}. Retrying...")
+            time.sleep(RETRY_DELAY)
+        else:
+            print(f"❌ Request failed with status {response.status_code}")
+            raise SystemExit(1)
+
+    print("❌ Max retries exceeded.")
+    raise SystemExit(1)
+
+
+def post_reservation(payload: dict, headers: dict) -> requests.Response:
+    reserve_url = "https://api.lifetimefitness.com/sys/registrations/V3/ux/resource"
+    print(
+        f"Making reservation request for {payload['start']} for {payload['duration']} minutes on court {payload['resourceId']}"
+    )
+    response = make_request_with_retries(
+        method="POST",
+        url=reserve_url,
+        headers=headers,
+        payload=payload,
+    )
+    return response
+
+
+def complete_reservation(registration_id: str, headers: dict) -> requests.Response:
+    complete_url = f"https://api.lifetimefitness.com/sys/registrations/V3/ux/resource/{registration_id}/complete"
+    print(f"Completing reservation for {registration_id}")
+    complete_payload = {
+        "acceptedDocuments": [73]
+    }  # this is the waiver ID, but who knows what it is or whether it will change
+    response = make_request_with_retries(
+        method="PUT",
+        url=complete_url,
+        headers=headers,
+        payload=complete_payload,
+    )
+    return response
+
+
+def to_central_time_iso(date: str, time: str) -> str:
+    naive_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
+
+    tz = pytz.timezone("America/Chicago")  # well, St. Louis, but close enough
+    local_dt = tz.localize(naive_datetime)
+
+    return local_dt.isoformat()
+
 
 def main(date: str, time: str, court: int = 3, duration: int = 90) -> None:
     with open("auth_headers.json", "r") as f:
         headers = json.load(f)
     headers["Content-Type"] = "application/json"
-
-    reserve_url = "https://api.lifetimefitness.com/sys/registrations/V3/ux/resource"
-
-    def to_central_time_iso(date: str, time: str) -> str:
-        naive_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
-
-        tz = pytz.timezone("America/Chicago")  # well, St. Louis, but close enough
-        local_dt = tz.localize(naive_datetime)
-
-        return local_dt.isoformat()
 
     body = {
         "resourceId": COURT_IDS[court],
@@ -34,55 +105,24 @@ def main(date: str, time: str, court: int = 3, duration: int = 90) -> None:
         "duration": str(duration),
     }
 
-    # Send the initial booking request
-    response = requests.post(reserve_url, headers=headers, json=body)
+    # Make initial reservation request
+    response = post_reservation(body, headers)
 
-    if response.ok:
-        registration_id = response.json().get("regId")
-        if not registration_id:
-            print(
-                "❌ No registration ID returned. The response shape may have changed."
-            )
-            return
-        print("✅ Reservation pending! Now we just need to accept the waiver...")
-    else:
-        if response.status_code == 403 or response.status_code == 401:
-            print(
-                """❌ Authentication failed. Remember to run extract_authentication_headers.py first and confirm that it has all 4 keys:
-                ocp-apim-subscription-key
-                x-ltf-ssoid
-                x-ltf-jwe
-                x-ltf-profile
-                """
-            )
-        elif response.status_code == 500:
-            print("❌ Server error. Try again just in case.")
-            print(response.content)
-        else:
-            print(
-                f"❌ Initial reservation request failed with status {response.status_code}"
-            )
-            print(response.content)
+    registration_id = response.json().get("regId")
+    if not registration_id:
+        print(
+            "❌ Failed to get registration ID from response. Response shape may have changed."
+        )
+        print("Response:", response.json())
         return
+
+    print(f"✅ Reservation ID: {registration_id}")
 
     # Accept waiver / complete booking
-    complete_url = f"https://api.lifetimefitness.com/sys/registrations/V3/ux/resource/{registration_id}/complete"
-    complete_payload = {
-        "acceptedDocuments": [73]
-    }  # this is the waiver ID, but who knows what it is or whether it will change
+    complete_reservation(registration_id, headers)
+    print("✅ Reservation complete!")
 
-    print(
-        f"📝 Completing reservation for {date} at {time} for {duration} minutes on court {court}."
-    )
-
-    response = requests.put(complete_url, headers=headers, json=complete_payload)
-    if response.ok:
-        print("✅ Reservation complete!")
-    else:
-        print(
-            f"❌ Reservation completion request failed with status {response.status_code}"
-        )
-        return
+    return
 
 
 if __name__ == "__main__":
