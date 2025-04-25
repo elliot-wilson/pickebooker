@@ -14,6 +14,37 @@ def schedule_run(
     )
     run_date = target_datetime - timedelta(days=8)
 
+    # create plist for refreshing authentication headers
+    label = f"com.picklebooker.refresh.{uuid.uuid4().hex[:8]}"
+    plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
+    script_path = os.path.abspath("extract_authentication_headers.py")
+
+    arguments = [
+        "/Users/elliotwilson/work/picklebooker/.venv/bin/python",
+        script_path,
+    ]
+    plist = {
+        "Label": label,
+        "ProgramArguments": arguments,
+        "EnvironmentVariables": {"LAUNCH_AGENT_PATH": plist_path},
+        "StartCalendarInterval": {
+            "Year": run_date.year,
+            "Month": run_date.month,
+            "Day": run_date.day,
+            "Hour": 8,
+            "Minute": 55,
+        },
+        "StandardOutPath": f"/tmp/{label}.out",
+        "StandardErrorPath": f"/tmp/{label}.err",
+        "RunAtLoad": True,
+    }
+    with open(plist_path, "wb") as f:
+        plistlib.dump(plist, f)
+    subprocess.run(["launchctl", "load", plist_path])
+    print(f"Scheduled authentication refresh for {target_date} at {target_time}.")
+    print(f"You can inspect the plist at {plist_path}")
+
+    # create plist for making booking
     label = f"com.picklebooker.{uuid.uuid4().hex[:8]}"
     plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
 
@@ -52,8 +83,9 @@ def schedule_run(
 
     subprocess.run(["launchctl", "load", plist_path])
     print(
-        f"Scheduled booking for {duration} minutes at court {court} {target_date.strftime('%Y-%m-%d')} at {target_time}"
+        f"Scheduled booking job for {duration} minutes at court {court} on {target_date.strftime('%Y-%m-%d')} at {target_time}."
     )
+    print(f"The job is scheduled for {run_date.strftime('%Y-%m-%d %H:%M')}.")
     print(f"You can inspect the plist at {plist_path}")
 
 
