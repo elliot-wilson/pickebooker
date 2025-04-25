@@ -6,23 +6,29 @@ import uuid
 from datetime import datetime, timedelta
 
 
-def schedule_run(target_date_str, start_gte, start_lte):
-    target_date = datetime.strptime(target_date_str, "%Y-%m-%d")
-    run_date = target_date - timedelta(days=8)
+def schedule_run(
+    target_date: str, target_time: str, court: int = 3, duration: int = 90
+) -> None:
+    target_datetime = datetime.strptime(
+        f"{target_date} {target_time}", "%Y-%m-%d %H:%M"
+    )
+    run_date = target_datetime - timedelta(days=8)
 
     label = f"com.picklebooker.{uuid.uuid4().hex[:8]}"
     plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
 
-    script_path = os.path.abspath("book_court.py")
+    script_path = os.path.abspath("reserve.py")
     arguments = [
         "/Users/elliotwilson/work/picklebooker/.venv/bin/python",
         script_path,
         "--date",
-        target_date_str,
-        "--start-gte",
-        str(start_gte),
-        "--start-lte",
-        str(start_lte),
+        target_date,
+        "--time",
+        target_time,
+        "--court",
+        court,
+        "--duration",
+        duration,
     ]
 
     plist = {
@@ -33,7 +39,7 @@ def schedule_run(target_date_str, start_gte, start_lte):
             "Year": run_date.year,
             "Month": run_date.month,
             "Day": run_date.day,
-            "Hour": 10,
+            "Hour": 9,
             "Minute": 0,
         },
         "StandardOutPath": f"/tmp/{label}.out",
@@ -45,18 +51,45 @@ def schedule_run(target_date_str, start_gte, start_lte):
         plistlib.dump(plist, f)
 
     subprocess.run(["launchctl", "load", plist_path])
-    print(f"Scheduling at {run_date.strftime('%Y-%m-%d %H:%M')} (local time)")
+    print(
+        f"Scheduled booking for {duration} minutes at court {court} {target_date.strftime('%Y-%m-%d')} at {target_time}"
+    )
+    print(f"You can inspect the plist at {plist_path}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--target-date", required=True, help="Date to book (YYYY-MM-DD)"
+        "--target-date",
+        required=True,
+        type=str,
+        help="Date to book. Format: YYYY-MM-DD. Example: 2025-04-28",
     )
     parser.add_argument(
-        "--start-gte", type=int, required=True, help="Start hour (0-23)"
+        "--time",
+        type=str,
+        required=True,
+        help="Time to book. Format: HH:MM (24-hour format). Example: 14:30",
     )
-    parser.add_argument("--start-lte", type=int, required=True, help="End hour (0-23)")
+    parser.add_argument(
+        "--court",
+        type=int,
+        choices=[1, 2, 3],
+        default=3,
+        help="Court number. Default is 3.",
+    )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        choices=[30, 60, 90],
+        default=90,
+        required=False,
+        help="Length of the booking. Default is 90 minutes.",
+    )
     args = parser.parse_args()
-
-    schedule_run(args.target_date, args.start_gte, args.start_lte)
+    schedule_run(
+        target_date=args.target_date,
+        target_time=args.time,
+        court=args.court,
+        duration=args.duration,
+    )
