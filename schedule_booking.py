@@ -83,7 +83,7 @@ def schedule_run(
 
     subprocess.run(["launchctl", "load", plist_path])
     print(
-        f"Scheduled booking job for {duration} minutes at court {court} on {target_date.strftime('%Y-%m-%d')} at {target_time}."
+        f"Scheduled booking job for {duration} minutes at court {court} on {target_date} at {target_time}."
     )
     print(f"The job is scheduled for {run_date.strftime('%Y-%m-%d %H:%M')}.")
     print(f"You can inspect the plist at {plist_path}")
