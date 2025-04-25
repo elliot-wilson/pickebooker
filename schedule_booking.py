@@ -41,7 +41,7 @@ def schedule_run(
     with open(plist_path, "wb") as f:
         plistlib.dump(plist, f)
     subprocess.run(["launchctl", "load", plist_path])
-    print(f"Scheduled authentication refresh for {target_date} at {target_time}.")
+    print(f"Scheduled authentication refresh for {target_date} at 8:55 AM.")
     print(f"You can inspect the plist at {plist_path}")
 
     # create plist for making booking
