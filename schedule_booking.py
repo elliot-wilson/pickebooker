@@ -6,12 +6,8 @@ import uuid
 from datetime import datetime, timedelta
 
 
-def schedule_run(
-    target_date: str, target_time: str, court: int = 3, duration: int = 90
-) -> None:
-    target_datetime = datetime.strptime(
-        f"{target_date} {target_time}", "%Y-%m-%d %H:%M"
-    )
+def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> None:
+    target_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
     run_date = target_datetime - timedelta(days=8)
 
     # create plist for refreshing authentication headers
@@ -41,7 +37,7 @@ def schedule_run(
     with open(plist_path, "wb") as f:
         plistlib.dump(plist, f)
     subprocess.run(["launchctl", "load", plist_path])
-    print(f"Scheduled authentication refresh for {target_date} at 8:55 AM.")
+    print(f"Scheduled authentication refresh for {run_date.strftime("%Y-%m-%d")} at 8:55 AM.")
     print(f"You can inspect the plist at {plist_path}")
 
     # create plist for making booking
@@ -53,9 +49,9 @@ def schedule_run(
         "/Users/elliotwilson/work/picklebooker/.venv/bin/python",
         script_path,
         "--date",
-        target_date,
+        date,
         "--time",
-        target_time,
+        time,
         "--court",
         str(court),
         "--duration",
@@ -82,7 +78,7 @@ def schedule_run(
 
     subprocess.run(["launchctl", "load", plist_path])
     print(
-        f"Scheduled booking job for {duration} minutes at court {court} on {target_date} at {target_time}."
+        f"Scheduled booking job for {duration} minutes at court {court} on {date} at {time}."
     )
     print(f"The job is scheduled for {run_date.strftime('%Y-%m-%d %H:%M')}.")
     print(f"You can inspect the plist at {plist_path}")
@@ -119,8 +115,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     schedule_run(
-        target_date=args.date,
-        target_time=args.time,
+        date=args.date,
+        time=args.time,
         court=args.court,
         duration=args.duration,
     )
