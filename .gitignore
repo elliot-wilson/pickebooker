@@ -1,3 +1,4 @@
 .env
 .venv/
 auth_headers.json
+__pycache__/
