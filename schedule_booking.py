@@ -4,19 +4,17 @@ import plistlib
 import subprocess
 import uuid
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
 
 
-def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> None:
-    target_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
-    run_date = target_datetime - timedelta(days=8)
-
-    # create plist for refreshing authentication headers
+def schedule_authentication_refresh(*, run_date_: datetime) -> None:
+    load_dotenv()
     label = f"com.picklebooker.refresh.{uuid.uuid4().hex[:8]}"
     plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
     script_path = os.path.abspath("extract_authentication_headers.py")
-
     arguments = [
-        "/Users/elliotwilson/work/picklebooker/.venv/bin/python",
+        os.getenv("PYTHON_PATH"),
         script_path,
     ]
     plist = {
@@ -24,9 +22,9 @@ def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> No
         "ProgramArguments": arguments,
         "EnvironmentVariables": {"LAUNCH_AGENT_PATH": plist_path},
         "StartCalendarInterval": {
-            "Year": run_date.year,
-            "Month": run_date.month,
-            "Day": run_date.day,
+            "Year": run_date_.year,
+            "Month": run_date_.month,
+            "Day": run_date_.day,
             "Hour": 8,
             "Minute": 55,
         },
@@ -37,21 +35,22 @@ def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> No
     with open(plist_path, "wb") as f:
         plistlib.dump(plist, f)
     subprocess.run(["launchctl", "load", plist_path])
-    print(f"Scheduled authentication refresh for {run_date.strftime("%Y-%m-%d")} at 8:55 AM.")
+    print(f"Scheduled authentication refresh job for {run_date_.strftime("%Y-%m-%d")} at 8:55 AM.")
     print(f"You can inspect the plist at {plist_path}")
 
-    # create plist for making booking
+def schedule_court_booking_for_date(*, run_date: str, reservation_date, reservation_time: str, court: int = 3, duration: int = 90) -> None:
+    load_dotenv()
     label = f"com.picklebooker.{uuid.uuid4().hex[:8]}"
     plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
 
     script_path = os.path.abspath("reserve.py")
     arguments = [
-        "/Users/elliotwilson/work/picklebooker/.venv/bin/python",
+        os.getenv("PYTHON_PATH"),
         script_path,
         "--date",
-        date,
+        reservation_date,
         "--time",
-        time,
+        reservation_time,
         "--court",
         str(court),
         "--duration",
@@ -78,11 +77,18 @@ def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> No
 
     subprocess.run(["launchctl", "load", plist_path])
     print(
-        f"Scheduled booking job for {duration} minutes at court {court} on {date} at {time}."
+        f"Scheduled booking job for {duration} minutes at court {court} on {reservation_date} at {reservation_time}."
     )
     print(f"The job is scheduled for {run_date.strftime('%Y-%m-%d %H:%M')}.")
     print(f"You can inspect the plist at {plist_path}")
 
+def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> None:
+    target_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
+    # bookings open 8 days in advance, so schedule the jobs for 8 days before the reservation date
+    run_date = target_datetime - timedelta(days=8)
+
+    schedule_authentication_refresh(run_date_=run_date)
+    schedule_court_booking_for_date(run_date=run_date, reservation_date=date, reservation_time=time, court=court, duration=duration)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
