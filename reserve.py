@@ -12,7 +12,7 @@ COURT_IDS = {
     3: "ZXhlcnA6MjgwYnI1MjAxOjcwMTU5MTE0MTUwOA==",
 }
 
-MAX_RETRIES = 6
+MAX_RETRIES = 8
 RETRY_DELAY = 0.2  # seconds
 
 

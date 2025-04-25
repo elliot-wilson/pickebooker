@@ -10,6 +10,7 @@ TARGET_URL = "https://my.lifetime.life/account/my-reservations.html"
 
 
 def main():
+    print("🔑 Extracting authentication headers...")
     load_dotenv()
     username = os.getenv("ACCOUNT_USERNAME")
     password = os.getenv("ACCOUNT_PASSWORD")
