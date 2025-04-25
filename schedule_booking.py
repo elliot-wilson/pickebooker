@@ -91,10 +91,10 @@ def schedule_run(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--target-date",
+        "--date",
         required=True,
         type=str,
-        help="Date to book. Format: YYYY-MM-DD. Example: 2025-04-28",
+        help="Target date to book. Format: YYYY-MM-DD. Example: 2025-04-28",
     )
     parser.add_argument(
         "--time",
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     schedule_run(
-        target_date=args.target_date,
+        target_date=args.date,
         target_time=args.time,
         court=args.court,
         duration=args.duration,
