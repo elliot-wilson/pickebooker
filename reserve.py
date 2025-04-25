@@ -72,7 +72,7 @@ def main(date: str, time: str, court: int = 3, duration: int = 90) -> None:
     }  # this is the waiver ID, but who knows what it is or whether it will change
 
     print(
-        f"📝 Completing reservation for {date} at {time} for {duration} minutes on court {court}..."
+        f"📝 Completing reservation for {date} at {time} for {duration} minutes on court {court}."
     )
 
     response = requests.put(complete_url, headers=headers, json=complete_payload)
