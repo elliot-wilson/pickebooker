@@ -57,9 +57,9 @@ def schedule_run(
         "--time",
         target_time,
         "--court",
-        court,
+        str(court),
         "--duration",
-        duration,
+        str(duration),
     ]
 
     plist = {
@@ -75,7 +75,6 @@ def schedule_run(
         },
         "StandardOutPath": f"/tmp/{label}.out",
         "StandardErrorPath": f"/tmp/{label}.err",
-        "RunAtLoad": True,
     }
 
     with open(plist_path, "wb") as f:
