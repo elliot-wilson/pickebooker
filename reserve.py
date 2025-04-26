@@ -1,10 +1,13 @@
 import argparse
 import json
+import os
 import time
 from datetime import datetime
 
 import pytz
 import requests
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 COURT_IDS = {
     1: "ZXhlcnA6MjgwYnI0ODAxOjcwMTU5MTE0MTUwOA==",
@@ -95,7 +98,7 @@ def to_central_time_iso(date: str, time: str) -> str:
 
 
 def main(date: str, time: str, court: int = 3, duration: int = 90) -> None:
-    with open("auth_headers.json", "r") as f:
+    with open(os.path.join(BASE_DIR, "auth_headers.json"), "r") as f:
         headers = json.load(f)
     headers["Content-Type"] = "application/json"
 
