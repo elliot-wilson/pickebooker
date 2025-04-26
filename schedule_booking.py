@@ -4,8 +4,8 @@ import plistlib
 import subprocess
 import uuid
 from datetime import datetime, timedelta
+
 from dotenv import load_dotenv
-import os
 
 
 def schedule_authentication_refresh(*, run_date: datetime) -> None:
@@ -30,15 +30,24 @@ def schedule_authentication_refresh(*, run_date: datetime) -> None:
         },
         "StandardOutPath": f"/tmp/{label}.out",
         "StandardErrorPath": f"/tmp/{label}.err",
-        "RunAtLoad": True,
     }
     with open(plist_path, "wb") as f:
         plistlib.dump(plist, f)
     subprocess.run(["launchctl", "load", plist_path])
-    print(f"Scheduled authentication refresh job for {run_date.strftime("%Y-%m-%d")} at 8:55 AM.")
+    print(
+        f"Scheduled authentication refresh job for {run_date.strftime('%Y-%m-%d')} at 8:55 AM."
+    )
     print(f"You can inspect the plist at {plist_path}")
 
-def schedule_court_booking_for_date(*, run_date: str, reservation_date, reservation_time: str, court: int = 3, duration: int = 90) -> None:
+
+def schedule_court_booking_for_date(
+    *,
+    run_date: str,
+    reservation_date,
+    reservation_time: str,
+    court: int = 3,
+    duration: int = 90,
+) -> None:
     load_dotenv()
     label = f"com.picklebooker.{uuid.uuid4().hex[:8]}"
     plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
@@ -70,6 +79,7 @@ def schedule_court_booking_for_date(*, run_date: str, reservation_date, reservat
         },
         "StandardOutPath": f"/tmp/{label}.out",
         "StandardErrorPath": f"/tmp/{label}.err",
+        "RunAtLoad": True,
     }
 
     with open(plist_path, "wb") as f:
@@ -82,13 +92,21 @@ def schedule_court_booking_for_date(*, run_date: str, reservation_date, reservat
     print(f"The job is scheduled for {run_date.strftime('%Y-%m-%d %H:%M')}.")
     print(f"You can inspect the plist at {plist_path}")
 
+
 def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> None:
     target_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
     # bookings open 8 days in advance, so schedule the jobs for 8 days before the reservation date
     run_date = target_datetime - timedelta(days=8)
 
     schedule_authentication_refresh(run_date=run_date)
-    schedule_court_booking_for_date(run_date=run_date, reservation_date=date, reservation_time=time, court=court, duration=duration)
+    schedule_court_booking_for_date(
+        run_date=run_date,
+        reservation_date=date,
+        reservation_time=time,
+        court=court,
+        duration=duration,
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
