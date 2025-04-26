@@ -7,6 +7,8 @@ from datetime import datetime
 import pytz
 import requests
 
+from extract_authentication_headers import OUTPUT_PATH
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 COURT_IDS = {
@@ -98,7 +100,7 @@ def to_central_time_iso(date: str, time: str) -> str:
 
 
 def main(date: str, time: str, court: int = 3, duration: int = 90) -> None:
-    with open(os.path.join(BASE_DIR, "auth_headers.json"), "r") as f:
+    with open(os.path.join(BASE_DIR, OUTPUT_PATH), "r") as f:
         headers = json.load(f)
     headers["Content-Type"] = "application/json"
 
