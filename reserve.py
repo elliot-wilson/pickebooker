@@ -49,6 +49,7 @@ def make_request_with_retries(
             time.sleep(RETRY_DELAY)
         else:
             print(f"❌ Request failed with status {response.status_code}")
+            print(f"Response: {response.text}")
             raise SystemExit(1)
 
     print("❌ Max retries exceeded.")
