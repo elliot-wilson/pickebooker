@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_PATH = "auth_headers.json"
+AUTH_HEADERS_PATH = "auth_headers.json"
 
 # this URL fetches active reservations, so we can be sure it has an API call
 TARGET_URL = "https://my.lifetime.life/account/my-reservations.html"
@@ -50,9 +50,9 @@ def main():
         browser.close()
 
         if found_headers:
-            with open(os.path.join(BASE_DIR, OUTPUT_PATH), "w") as f:
+            with open(os.path.join(BASE_DIR, AUTH_HEADERS_PATH), "w") as f:
                 json.dump(found_headers, f, indent=2)
-            print(f"✅ Saved auth headers to {OUTPUT_PATH}")
+            print(f"✅ Saved auth headers to {AUTH_HEADERS_PATH}")
         else:
             print("⚠️ Did not find any matching headers.")
 
