@@ -18,7 +18,7 @@ def main():
     password = os.getenv("ACCOUNT_PASSWORD")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
 
@@ -42,7 +42,7 @@ def main():
         page.fill("input#account-username", username)
         page.fill("input#account-password", password)
         page.click("button#login-btn")
-        page.wait_for_url("**/home.html", timeout=10000)
+        page.wait_for_url("**/*.html", timeout=10000)
 
         page.goto(TARGET_URL)
         page.wait_for_timeout(3000)
