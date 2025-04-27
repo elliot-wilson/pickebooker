@@ -34,7 +34,6 @@ def schedule_authentication_refresh(*, run_date: datetime) -> None:
         },
         "StandardOutPath": f"/tmp/{label}.out",
         "StandardErrorPath": f"/tmp/{label}.err",
-        "RunAtLoad": True,
     }
     with open(plist_path, "wb") as f:
         plistlib.dump(plist, f)
@@ -87,7 +86,6 @@ def schedule_court_booking_for_date(
         },
         "StandardOutPath": f"/tmp/{label}.out",
         "StandardErrorPath": f"/tmp/{label}.err",
-        "RunAtLoad": True,
     }
 
     with open(plist_path, "wb") as f:
