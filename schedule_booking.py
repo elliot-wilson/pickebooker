@@ -4,6 +4,7 @@ import plistlib
 import subprocess
 import uuid
 from datetime import datetime, timedelta
+import pytz
 
 from dotenv import load_dotenv
 
@@ -17,6 +18,9 @@ def schedule_authentication_refresh(*, run_date: datetime) -> None:
         os.getenv("PYTHON_PATH"),
         script_path,
     ]
+    tz = pytz.timezone("America/Chicago")
+    run_date = run_date.astimezone(tz).replace(hour=8, minute=55)
+
     plist = {
         "Label": label,
         "ProgramArguments": arguments,
@@ -25,8 +29,8 @@ def schedule_authentication_refresh(*, run_date: datetime) -> None:
             "Year": run_date.year,
             "Month": run_date.month,
             "Day": run_date.day,
-            "Hour": 8,
-            "Minute": 55,
+            "Hour": run_date.hour,
+            "Minute": run_date.minute,
         },
         "StandardOutPath": f"/tmp/{label}.out",
         "StandardErrorPath": f"/tmp/{label}.err",
@@ -67,6 +71,9 @@ def schedule_court_booking_for_date(
         str(duration),
     ]
 
+    tz = pytz.timezone("America/Chicago")
+    run_date = run_date.astimezone(tz).replace(hour=9, minute=0)
+
     plist = {
         "Label": label,
         "ProgramArguments": arguments,
@@ -75,8 +82,8 @@ def schedule_court_booking_for_date(
             "Year": run_date.year,
             "Month": run_date.month,
             "Day": run_date.day,
-            "Hour": 9,
-            "Minute": 0,
+            "Hour": run_date.hour,
+            "Minute": run_date.minute,
         },
         "StandardOutPath": f"/tmp/{label}.out",
         "StandardErrorPath": f"/tmp/{label}.err",
