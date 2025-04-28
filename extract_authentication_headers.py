@@ -11,7 +11,7 @@ AUTH_HEADERS_PATH = "auth_headers.json"
 TARGET_URL = "https://my.lifetime.life/account/my-reservations.html"
 
 
-def main():
+def extract_authentication_headers():
     print("🔑 Extracting authentication headers...")
     load_dotenv()
     username = os.getenv("ACCOUNT_USERNAME")
@@ -58,4 +58,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    extract_authentication_headers()

@@ -7,18 +7,40 @@ from datetime import datetime, timedelta
 import pytz
 from dotenv import load_dotenv
 
+from extract_authentication_headers import extract_authentication_headers
+from reserve import reserve
+
 PLIST_DIR = f"{os.path.expanduser('~')}/Library/LaunchAgents/"
 
 
-def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> None:
+def main(
+    date: str,
+    time: str,
+    court: int = 3,
+    duration: int = 90,
+) -> None:
     target_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
     # bookings open 8 days in advance, so schedule the jobs for 8 days before the reservation date
     run_date = target_datetime - timedelta(days=8)
 
-    auth_run_date = convert_to_local_equivalent_of_central(run_date, hour=8, minute=55)
     booking_run_date = convert_to_local_equivalent_of_central(
         run_date, hour=9, minute=0
     )
+
+    if booking_run_date < datetime.now():
+        print(
+            "👉 This timeslot has already been released, so I'll try to book it immediately"
+        )
+        extract_authentication_headers()
+        reserve(
+            date=date,
+            time=time,
+            court=court,
+            duration=duration,
+        )
+        return
+
+    auth_run_date = convert_to_local_equivalent_of_central(run_date, hour=8, minute=55)
 
     schedule_authentication_refresh(run_date=auth_run_date)
     schedule_court_booking_for_date(
@@ -141,7 +163,7 @@ if __name__ == "__main__":
         help="Length of the booking. Default is 90 minutes.",
     )
     args = parser.parse_args()
-    schedule_run(
+    main(
         date=args.date,
         time=args.time,
         court=args.court,

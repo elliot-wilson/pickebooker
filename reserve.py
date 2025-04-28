@@ -99,7 +99,7 @@ def to_central_time_iso(date: str, time: str) -> str:
     return local_dt.isoformat()
 
 
-def main(date: str, time: str, court: int = 3, duration: int = 90) -> None:
+def reserve(date: str, time: str, court: int = 3, duration: int = 90) -> None:
     with open(os.path.join(BASE_DIR, AUTH_HEADERS_PATH), "r") as f:
         headers = json.load(f)
     headers["Content-Type"] = "application/json"
@@ -161,4 +161,4 @@ if __name__ == "__main__":
         help="Length of the booking. Default is 90 minutes.",
     )
     args = parser.parse_args()
-    main(date=args.date, time=args.time, court=args.court, duration=args.duration)
+    reserve(date=args.date, time=args.time, court=args.court, duration=args.duration)
