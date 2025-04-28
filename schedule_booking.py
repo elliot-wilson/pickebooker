@@ -2,47 +2,45 @@ import argparse
 import os
 import plistlib
 import subprocess
-import uuid
 from datetime import datetime, timedelta
 
 import pytz
 from dotenv import load_dotenv
 
+PLIST_DIR = f"{os.path.expanduser('~')}/Library/LaunchAgents/"
+
+
+def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> None:
+    target_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
+    # bookings open 8 days in advance, so schedule the jobs for 8 days before the reservation date
+    run_date = target_datetime - timedelta(days=8)
+
+    auth_run_date = convert_to_local_equivalent_of_central(run_date, hour=8, minute=55)
+    booking_run_date = convert_to_local_equivalent_of_central(
+        run_date, hour=9, minute=0
+    )
+
+    schedule_authentication_refresh(run_date=auth_run_date)
+    schedule_court_booking_for_date(
+        run_date=booking_run_date,
+        reservation_date=date,
+        reservation_time=time,
+        court=court,
+        duration=duration,
+    )
+
 
 def schedule_authentication_refresh(*, run_date: datetime) -> None:
     load_dotenv()
-    label = f"com.picklebooker.refresh.{uuid.uuid4().hex[:8]}"
-    plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
+    label = f"com.picklebooker.refresh.{run_date.strftime('%Y-%m-%d')}"
     script_path = os.path.abspath("extract_authentication_headers.py")
     arguments = [
         os.getenv("PYTHON_PATH"),
         script_path,
     ]
-    tz = pytz.timezone("America/Chicago")
-    run_date = run_date.astimezone(tz).replace(hour=8, minute=55)
 
-    plist = {
-        "Label": label,
-        "ProgramArguments": arguments,
-        "EnvironmentVariables": {"LAUNCH_AGENT_PATH": plist_path},
-        "StartCalendarInterval": {
-            "Year": run_date.year,
-            "Month": run_date.month,
-            "Day": run_date.day,
-            "Hour": run_date.hour,
-            "Minute": run_date.minute,
-        },
-        "StandardOutPath": f"/tmp/{label}.out",
-        "StandardErrorPath": f"/tmp/{label}.err",
-        "RunAtLoad": True,
-    }
-    with open(plist_path, "wb") as f:
-        plistlib.dump(plist, f)
-    subprocess.run(["launchctl", "load", plist_path])
-    print(
-        f"Scheduled authentication refresh job for {run_date.strftime('%Y-%m-%d %H:%M')}."
-    )
-    print(f"You can inspect the plist at {plist_path}")
+    print("Scheduling authentication refresh job...")
+    create_plist(label=label, arguments=arguments, run_date=run_date)
 
 
 def schedule_court_booking_for_date(
@@ -54,8 +52,7 @@ def schedule_court_booking_for_date(
     duration: int = 90,
 ) -> None:
     load_dotenv()
-    label = f"com.picklebooker.{uuid.uuid4().hex[:8]}"
-    plist_path = f"{os.path.expanduser('~')}/Library/LaunchAgents/{label}.plist"
+    label = f"com.picklebooker.book.{run_date.strftime('%Y-%m-%d')}"
 
     script_path = os.path.abspath("reserve.py")
     arguments = [
@@ -71,9 +68,14 @@ def schedule_court_booking_for_date(
         str(duration),
     ]
 
-    tz = pytz.timezone("America/Chicago")
-    run_date = run_date.astimezone(tz).replace(hour=9, minute=0)
+    print(
+        f"Scheduling booking job for {duration} minutes at court {court} on {reservation_date} at {reservation_time}..."
+    )
+    create_plist(label=label, arguments=arguments, run_date=run_date)
 
+
+def create_plist(label: str, arguments: list, run_date: datetime) -> None:
+    plist_path = os.path.join(PLIST_DIR, f"{label}.plist")
     plist = {
         "Label": label,
         "ProgramArguments": arguments,
@@ -89,31 +91,25 @@ def schedule_court_booking_for_date(
         "StandardErrorPath": f"/tmp/{label}.err",
         "RunAtLoad": True,
     }
-
     with open(plist_path, "wb") as f:
         plistlib.dump(plist, f)
-
     subprocess.run(["launchctl", "load", plist_path])
     print(
-        f"Scheduled booking job for {duration} minutes at court {court} on {reservation_date} at {reservation_time}."
+        f"✅ Scheduled job for {run_date.strftime('%Y-%m-%d %H:%M')}. You can inspect the plist at {plist_path}"
     )
-    print(f"The job is scheduled for {run_date.strftime('%Y-%m-%d %H:%M')}.")
-    print(f"You can inspect the plist at {plist_path}")
 
 
-def schedule_run(date: str, time: str, court: int = 3, duration: int = 90) -> None:
-    target_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
-    # bookings open 8 days in advance, so schedule the jobs for 8 days before the reservation date
-    run_date = target_datetime - timedelta(days=8)
+def convert_to_local_equivalent_of_central(
+    run_date: datetime, hour: int, minute: int = 0
+) -> datetime:
+    chicago_tz = pytz.timezone("America/Chicago")  # well, St. Louis, but close enough
+    local_tz = datetime.now().astimezone().tzinfo
 
-    schedule_authentication_refresh(run_date=run_date)
-    schedule_court_booking_for_date(
-        run_date=run_date,
-        reservation_date=date,
-        reservation_time=time,
-        court=court,
-        duration=duration,
+    central_target = chicago_tz.localize(
+        datetime(run_date.year, run_date.month, run_date.day, hour, minute)
     )
+
+    return central_target.astimezone(local_tz)
 
 
 if __name__ == "__main__":
