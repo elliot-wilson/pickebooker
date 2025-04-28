@@ -2,3 +2,4 @@
 .venv/
 auth_headers.json
 __pycache__/
+.vscode/
