@@ -72,7 +72,7 @@ Next, run `python3 reserve.py` with arguments specifying which court you want to
 
 The arguments are as follows:
 
-- --date: a YYYY-MM-DD date string like "2025-05-01". (You don't literally need ""s.)
-- --time: an HH:MM 24-hour time string like "11:00"
-- --court: the court number. allowed values are 1, 2, or 3. 3 is the default, so you do not _have_
-- --duration: how long to reserve for. allowed values are 30, 60, or 90. 90 is the default, so you do not _have_ to supply this argument.
+- `--date`: a YYYY-MM-DD date string like "2025-05-01". (You don't literally need ""s.)
+- `--time`: an HH:MM 24-hour time string like "11:00"
+- `--court`: the court number. allowed values are 1, 2, or 3. 3 is the default, so you do not _have_
+- `--duration`: how long to reserve for. allowed values are 30, 60, or 90. 90 is the default, so you do not _have_ to supply this argument.
