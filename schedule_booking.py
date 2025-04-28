@@ -13,7 +13,7 @@ from reserve import reserve
 PLIST_DIR = f"{os.path.expanduser('~')}/Library/LaunchAgents/"
 
 
-def main(
+def schedule_booking(
     date: str,
     time: str,
     court: int = 3,
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         help="Length of the booking. Default is 90 minutes.",
     )
     args = parser.parse_args()
-    main(
+    schedule_booking(
         date=args.date,
         time=args.time,
         court=args.court,

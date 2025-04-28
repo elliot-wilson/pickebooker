@@ -1,13 +1,13 @@
 from datetime import datetime
 from tkinter import *
 from tkinter import ttk
-from schedule_booking import schedule_run
+from schedule_booking import schedule_booking
 from tkinter import messagebox
 
 def schedule_booking(*args):
     if not validate_inputs():
         return
-    schedule_run(date.get(), time.get(), int(court.get()), int(duration.get()))
+    schedule_booking(date.get(), time.get(), int(court.get()), int(duration.get()))
     messagebox.showinfo(title="Success", message="Booking scheduler successfully created!")
     root.destroy()
 
