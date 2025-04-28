@@ -4,8 +4,8 @@ import plistlib
 import subprocess
 import uuid
 from datetime import datetime, timedelta
-import pytz
 
+import pytz
 from dotenv import load_dotenv
 
 
@@ -40,7 +40,7 @@ def schedule_authentication_refresh(*, run_date: datetime) -> None:
         plistlib.dump(plist, f)
     subprocess.run(["launchctl", "load", plist_path])
     print(
-        f"Scheduled authentication refresh job for {run_date.strftime('%Y-%m-%d')} at 8:55 AM."
+        f"Scheduled authentication refresh job for {run_date.strftime('%Y-%m-%d %H:%M')}."
     )
     print(f"You can inspect the plist at {plist_path}")
 
