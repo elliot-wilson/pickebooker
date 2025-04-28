@@ -27,7 +27,7 @@ def schedule_booking(
         run_date, hour=9, minute=0
     )
 
-    if booking_run_date < datetime.now():
+    if booking_run_date < datetime.now(tz=pytz.UTC):
         print(
             "👉 This timeslot has already been released, so I'll try to book it immediately"
         )
