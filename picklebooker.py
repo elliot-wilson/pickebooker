@@ -4,7 +4,7 @@ from tkinter import ttk
 from schedule_booking import schedule_booking
 from tkinter import messagebox
 
-def schedule_booking(*args):
+def run_schedule_booking(*args):
     if not validate_inputs():
         return
     schedule_booking(date.get(), time.get(), int(court.get()), int(duration.get()))
@@ -63,13 +63,13 @@ duration_entry = ttk.Combobox(mainframe, width=12, textvariable=duration, values
 duration_entry.grid(column=1, row=4, sticky=(W, E))
 ttk.Label(mainframe, text="Duration").grid(column=2, row=4, sticky=(W, E))
 
-ttk.Button(mainframe, text="Schedule booking", command=schedule_booking).grid(column=1, row=5, sticky=W)
+ttk.Button(mainframe, text="Schedule booking", command=run_schedule_booking).grid(column=1, row=5, sticky=W)
 
 for child in mainframe.winfo_children(): 
     child.grid_configure(padx=5, pady=5)
 
 date_entry.focus()
 
-root.bind("<Return>", schedule_booking)
+root.bind("<Return>", run_schedule_booking)
 
 root.mainloop()
