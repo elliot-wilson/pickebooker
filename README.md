@@ -52,23 +52,27 @@ echo "PYTHON_PATH=$(which python3)" >> .env
 
 ## Using Picklebooker
 
-The simplest way to run Picklebooker is to double-click
+### Overview
 
-There are three scripts in this directory:
+Picklebooker is designed to let you schedule a pickleball court ahead of time. By providing the `date`, `time`, and optional `court` and `duration` values of the slot you'd like to book, you can schedule a Mac task that will attempt to book it at 9am Central 8 days in advance.
 
-- `extract_authentication_headers.py`
-- `reserve.py`
-- `schedule_booking.py`
+### The simple way
 
-`extract_authentication_headers.py` is a Python script that uses Playwright to log into your Lifetime account (using the username/password you supply in the .env file) and save your authentication headers to a local file. You need these headers in order to make requests to Lifetime's API. This script needs to be run sometime shortly before you attempt to reserve a court. Otherwise, you'll fail Lifetime's authentication. It doesn't have to _immediately_ before, but it should be reasonably close.
+The simplest way to run Picklebooker is to double-click the `picklebooker.command` file. That will open a small GUI that lets you enter in the arguments for the scheduler.
 
-`reserve.py` is a Python script that makes requests to Lifetime's API to book a reservation. To run it manually, you need to pass in the following arguments:
+If you'd like to move that command file somewhere else on your computer (e.g. to your Desktop), just edit line 2 so that it points to the absolute path of your picklebooker directory (for example, `~/Documents/picklebooker).
+
+### Running the scripts by hand
+
+If you don't want to rely on the scheduler, you can run the tasks by hand. This will fire them immediately.
+
+First, you need to run `python3 extract_authentication_headers.py`. This script logs into your Lifetime account (using the username/password you supplied in the `.env` file) and saves your authentication headers to a local file. You'll need those headers to make requests to Lifetime's API. This script needs to be run shortly before you attempt to reserve a court.
+
+Next, run `python3 reserve.py` with arguments specifying which court you want to book and when. For example, you could run `python3 reserve.py --date 2025-05-06 --time 13:00 --court 3` if you want it to book court 3 at 1:00pm on May 6th. NOTE: This script will run immediately, so if you are trying to book a court on the day of the release, you'll need to press Enter at 9am Central.
+
+The arguments are as follows:
 
 - --date: a YYYY-MM-DD date string like "2025-05-01". (You don't literally need ""s.)
 - --time: an HH:MM 24-hour time string like "11:00"
-
-By default, it tries to book court 3 for 90 minutes. You can optionally pass in --court and --duration arguments.
-
-`schedule_booking.py` is a Python script that creates two plist files that will schedule the above scripts to run targetting a specific time. It takes the same arguments as `reserve.py`. If you pass in a date argument of "2025-05-15", it will schedule an authentication refresh for May 7 at 8:55 AM Central and a booking script at 9:00 AM (targeting May 15). This is the part which has been hardest to debug; it might still need some work. But the idea is that, at any point before May 7, you can say, "I want to schedule court 3 for 11am on Thursday May 15", and by running the script `python3 schedule_booking.py --date 2025-05-08 --time 11:00`, it will create the authentication and booking tasks that will run at 8:55am and 9:00 am on May 7 respectively.
-
-If the scheduler is not working, you can always run `extract_authentication_headers.py` and `reserve.py` manually. Run `python3 extract_authentication_headers.py` at 8:55ish and `python3 reserve.py --date YYYY-MM-DD --time HH:MM` right at 9am.
+- --court: the court number. allowed values are 1, 2, or 3. 3 is the default, so you do not _have_
+- --duration: how long to reserve for. allowed values are 30, 60, or 90. 90 is the default, so you do not _have_ to supply this argument.
