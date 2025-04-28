@@ -2,11 +2,11 @@
 
 To use this program, you'll need to build a local development environment that can run Python.
 
-1. Make sure you have Homebrew installed. Open your `Terminal` and enter the command `brew --version`. If it responds with something like `Homebrew 4.xx.xx`, you have Homebrew. If not, install Homebrew by copying the command on this webpage into your Terminal: https://brew.sh/. During the installation, it may ask you to copy and paste additional commands. Do what it says. Installing Homebrew may take 15+ minutes.
+1. Make sure you have Homebrew installed. Open your `Terminal` and enter the command `brew --version`. If it responds with something like `Homebrew 4.xx.xx`, you have Homebrew. If not, install Homebrew by going to the Homebrew website (https://brew.sh/) and copying the command it gives you into your Terminal. During the installation, it may ask you to copy and paste additional commands. Do what it says. Installing Homebrew may take 15+ minutes.
 
 2. Install Python from https://www.python.org/downloads/. Afterwards, if you open the Terminal program and run `python3 --version`, it should give you a response like `Python 3.xx.xx`.
 
-3. Install some additional tools with Homebrew by running these commands:
+3. Install some additional tools using Homebrew by running these commands:
 
 - `brew install git`
 - `brew install direnv`
@@ -34,7 +34,9 @@ direnv: export +VIRTUAL_ENV +VIRTUAL_ENV_PROMPT ~PATH
 
 4. Run `pip3 install -r requirements.txt`. This will install all the packages you need for this script.
 
-5. Enter this into your terminal from the root of this folder, replacing `username` and `password` with your username and password. You do not need to add any spaces or `"`s or adjust anything else in the command. Just replace the letters `username` with (e.g.) `elliotwilson`:
+5. Run `playwright install` to enable the `extract_authentication_headers` script to work.
+
+6. Enter the following commands into your terminal from the root of this folder, replacing `username` and `password` with your username and password. You do not need to add any spaces or `"`s or adjust anything else in the command. Just replace the letters `username` with (e.g.) `elliotwilson`:
 
 ```
 touch .env
@@ -49,6 +51,8 @@ echo "PYTHON_PATH=$(which python3)" >> .env
 ```
 
 ## Using Picklebooker
+
+The simplest way to run Picklebooker is to double-click
 
 There are three scripts in this directory:
 
