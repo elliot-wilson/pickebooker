@@ -7,4 +7,6 @@ rm -f /tmp/com.picklebooker.*.out /tmp/com.picklebooker.*.err
 echo "✅ Done cleaning up."
 exit 0
 
+# this script will remove all picklebooker launch agents and logs
+
 # run chmod +x clear_schedule.command before you run this for the first time
