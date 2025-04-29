@@ -12,7 +12,7 @@ To use this program, you'll need to build a local development environment that c
 - `brew install direnv`
 - `brew install python-tk`
 
-4. Enable `direnv` by running in your Terminal:
+4. Enable `direnv` by running these commands in your Terminal:
 
 ```
 echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc
@@ -54,13 +54,13 @@ echo "PYTHON_PATH=$(which python3)" >> .env
 
 ### Overview
 
-Picklebooker is designed to let you schedule a pickleball court ahead of time. By providing the `date`, `time`, and optional `court` and `duration` values of the slot you'd like to book, you can schedule a Mac task that will attempt to book it at 9am Central 8 days in advance.
+Picklebooker is designed to let you schedule a pickleball court without needing to be at your computer at the exact moment the reservation becomes available.  By providing the `date`, `time`, and optional `court` and `duration` values of the slot you'd like to book, you can schedule a Mac task that will attempt to book it at 9am Central 8 days in advance. Your computer _must be awake and logged in_, however, so you may want to install a tool like Caffeinate to keep it from falling asleep when it's trying to make a booking.
 
 ### The simple way
 
 The simplest way to run Picklebooker is to double-click the `picklebooker.command` file. That will open a small GUI that lets you enter in the arguments for the scheduler.
 
-If you'd like to move that command file somewhere else on your computer (e.g. to your Desktop), just edit line 2 so that it points to the absolute path of your picklebooker directory (for example, `~/Documents/picklebooker).
+If you'd like to move that command file somewhere else on your computer (e.g. to your Desktop), just edit line 2 so that it points to the absolute path of your picklebooker directory (for example, `~/Documents/picklebooker`).
 
 ### Running the scripts by hand
 
@@ -68,11 +68,11 @@ If you don't want to rely on the scheduler, you can run the tasks by hand. This 
 
 First, you need to run `python3 extract_authentication_headers.py`. This script logs into your Lifetime account (using the username/password you supplied in the `.env` file) and saves your authentication headers to a local file. You'll need those headers to make requests to Lifetime's API. This script needs to be run shortly before you attempt to reserve a court.
 
-Next, run `python3 reserve.py` with arguments specifying which court you want to book and when. For example, you could run `python3 reserve.py --date 2025-05-06 --time 13:00 --court 3` if you want it to book court 3 at 1:00pm on May 6th. NOTE: This script will run immediately, so if you are trying to book a court on the day of the release, you'll need to press Enter at 9am Central.
+Next, run `python3 reserve.py` with arguments specifying which court you want to book and when. For example, you could run `python3 reserve.py --date 2025-05-06 --time 13:00 --court 3` if you want it to book court 3 at 1:00pm on May 6th. NOTE: This script will run immediately, so if you are trying to book a court on the day of the release, you'll need to press Enter at exactly 9am Central.
 
 The arguments are as follows:
 
-- `--date`: a YYYY-MM-DD date string like "2025-05-01". (You don't literally need ""s.)
-- `--time`: an HH:MM 24-hour time string like "11:00"
-- `--court`: the court number. allowed values are 1, 2, or 3. 3 is the default, so you do not _have_
+- `--date`: a YYYY-MM-DD date string like 2025-05-01 .
+- `--time`: an HH:MM 24-hour time string like 11:00 .
+- `--court`: the court number. allowed values are 1, 2, or 3. 3 is the default, so you do not _have_ to supply this argument.
 - `--duration`: how long to reserve for. allowed values are 30, 60, or 90. 90 is the default, so you do not _have_ to supply this argument.
